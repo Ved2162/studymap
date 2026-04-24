@@ -14,7 +14,7 @@ const IS_PRODUCTION = !['localhost', '127.0.0.1'].includes(window.location.hostn
 // ── IMPORTANT: Update this after deploying your backend to Render ──
 // Replace 'YOUR_RENDER_APP_NAME' with the actual Render service name
 // e.g. 'studymap-backend-xxxx.onrender.com'
-const PRODUCTION_BACKEND_URL = 'https://studymap-backend-lv46.onrender.com';
+const PRODUCTION_BACKEND_URL = 'https://studymap-backend-86ft.onrender.com';
 
 // Backend Server Configuration
 const SERVER_CONFIG = {
