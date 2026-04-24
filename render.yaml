@@ -1,0 +1,34 @@
+# Render deployment configuration
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: studymap-backend
+    runtime: python
+    region: oregon
+    rootDir: code/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false  # Set manually if needed
+      - key: BREVO_API_KEY
+        sync: false
+      - key: SENDER_EMAIL
+        sync: false
+      - key: FRONTEND_URL
+        value: https://studymap-271.netlify.app
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+
+databases:
+  - name: studymap-db
+    plan: free
+    databaseName: studymap
+    user: studymap_user

@@ -7,16 +7,28 @@
 // SERVER CONFIGURATION
 // ============================================
 
+// Auto-detect environment: if running on Netlify (or any non-localhost),
+// use the deployed Render backend; otherwise use localhost for development.
+const IS_PRODUCTION = !['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+// ── IMPORTANT: Update this after deploying your backend to Render ──
+// Replace 'YOUR_RENDER_APP_NAME' with the actual Render service name
+// e.g. 'studymap-backend-xxxx.onrender.com'
+const PRODUCTION_BACKEND_URL = 'https://studymap-backend-lv46.onrender.com';
+
 // Backend Server Configuration
 const SERVER_CONFIG = {
     // Backend API Server (Flask)
     backend: {
-        host: 'localhost',
-        port: 5000,
-        protocol: 'http',
+        host: IS_PRODUCTION ? new URL(PRODUCTION_BACKEND_URL).hostname : 'localhost',
+        port: IS_PRODUCTION ? (new URL(PRODUCTION_BACKEND_URL).port || 443) : 5000,
+        protocol: IS_PRODUCTION ? 'https' : 'http',
         
         // Full URL for API calls
         get baseUrl() {
+            if (IS_PRODUCTION) {
+                return PRODUCTION_BACKEND_URL;
+            }
             return `${this.protocol}://${this.host}:${this.port}`;
         },
         get apiUrl() {
@@ -26,11 +38,14 @@ const SERVER_CONFIG = {
     
     // Frontend Server (HTTP Server)
     frontend: {
-        host: 'localhost',
-        port: 8000,
-        protocol: 'http',
+        host: IS_PRODUCTION ? window.location.hostname : 'localhost',
+        port: IS_PRODUCTION ? (window.location.port || 443) : 8000,
+        protocol: IS_PRODUCTION ? 'https' : 'http',
         
         get baseUrl() {
+            if (IS_PRODUCTION) {
+                return `${window.location.protocol}//${window.location.host}`;
+            }
             return `${this.protocol}://${this.host}:${this.port}`;
         }
     },
@@ -53,9 +68,18 @@ const SERVER_CONFIG = {
     app: {
         name: 'StudyMap',
         version: '1.0.0',
-        debug: true
+        debug: !IS_PRODUCTION
     }
 };
+
+// Log active configuration (only in dev)
+if (!IS_PRODUCTION) {
+    console.log('[StudyMap] Running in DEVELOPMENT mode');
+    console.log('[StudyMap] Backend URL:', SERVER_CONFIG.backend.baseUrl);
+} else {
+    console.log('[StudyMap] Running in PRODUCTION mode');
+    console.log('[StudyMap] Backend URL:', SERVER_CONFIG.backend.baseUrl);
+}
 
 // ============================================
 // HELPER FUNCTIONS

@@ -14,17 +14,17 @@ class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
     # MySQL connection string format: mysql+mysqlconnector://user:password@host:port/database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+mysqlconnector://root:root123@localhost/studymap'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+mysqlconnector://root:ved%40123@localhost/studymap'
 
 class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+mysqlconnector://root:root123@localhost/studymap'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+mysqlconnector://root:ved%40123@localhost/studymap'
     
 class TestingConfig(Config):
     """Testing configuration"""
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'mysql+mysqlconnector://root:root123@localhost/studymap_test'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'mysql+mysqlconnector://root:ved%40123@localhost/studymap_test'
 
 config = {
     'development': DevelopmentConfig,

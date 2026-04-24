@@ -143,6 +143,24 @@ function renderUserTable() {
     });
 }
 
+/**
+ * Helper to generate a Stat Card HTML
+ */
+function StatCard(icon, label, value, subtitle, type = 'primary') {
+    return `
+        <div class="stat-card">
+            <div class="stat-card-icon ${type}">
+                <svg class="icon"><use href="../assets/icons.svg#${icon}"></use></svg>
+            </div>
+            <div class="stat-card-info">
+                <span class="stat-card-label">${label}</span>
+                <span class="stat-card-value">${value}</span>
+                <span class="stat-card-subtitle">${subtitle}</span>
+            </div>
+        </div>
+    `;
+}
+
 // Settings functionality
 function setupAdminSettings() {
     // Populate Profile
@@ -226,6 +244,271 @@ function setupAdminSettings() {
     // Handled by common.js initLayout() which attaches listener to #logout-btn
 }
 
+// Full Report functionality
+let reportData = [];
+let isReportLoading = false;
+let hasReportLoadedInitially = false;
+let isReportEventsBound = false;
+
+async function setupFullReport() {
+    // Auto-load report when tab is activated
+    await loadReportData();
+
+    if (isReportEventsBound) return;
+
+    const generateBtn = document.getElementById('generate-report-btn');
+    const exportBtn = document.getElementById('export-report-btn');
+    const searchInput = document.getElementById('report-search');
+
+    if (generateBtn) {
+        generateBtn.onclick = async () => {
+            await loadReportData(true); // Manual refresh
+        };
+    }
+
+    if (searchInput) {
+        searchInput.oninput = () => {
+            const q = searchInput.value.toLowerCase();
+            const filtered = reportData.filter(u =>
+                u.name.toLowerCase().includes(q) ||
+                u.email.toLowerCase().includes(q) ||
+                u.role.toLowerCase().includes(q)
+            );
+            renderReportTable(filtered);
+        };
+    }
+
+    if (exportBtn) {
+        exportBtn.onclick = () => {
+            if (!reportData.length) {
+                Toast.show('No Data', 'Generate the report first before exporting.', 'error');
+                return;
+            }
+            exportReportCSV(reportData);
+        };
+    }
+    
+    isReportEventsBound = true;
+}
+
+async function loadReportData(isManualRefresh = false) {
+    // Prevent duplicate API calls
+    if (isReportLoading) {
+        console.log('Report already loading, skipping...');
+        return;
+    }
+
+    if (!isManualRefresh && hasReportLoadedInitially) {
+        return;
+    }
+
+    const generateBtn = document.getElementById('generate-report-btn');
+    const tbody = document.getElementById('report-table-body');
+    
+    // Show loading state
+    isReportLoading = true;
+    
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="17" class="report-empty-state">
+                    <svg class="icon spin-animation" style="width:2rem;height:2rem;opacity:0.4;">
+                        <use href="../assets/icons.svg#refresh-cw"></use>
+                    </svg>
+                    <p>${isManualRefresh ? 'Refreshing report data...' : 'Loading report data...'}</p>
+                </td>
+            </tr>
+        `;
+    }
+
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = `<svg class="icon icon-sm spin-animation"><use href="../assets/icons.svg#refresh-cw"></use></svg> ${isManualRefresh ? 'Refreshing...' : 'Loading...'}`;
+    }
+
+    try {
+        if (typeof API.getAdminReport !== 'function') {
+            throw new Error("API method not found. Please do a HARD REFRESH (Ctrl+F5 or Cmd+Shift+R) to clear browser cache.");
+        }
+
+        const response = await API.getAdminReport();
+        if (response && response.error) {
+            Toast.show('Error', response.error, 'error');
+            renderEmptyState('Error: ' + response.error);
+            return;
+        }
+        
+        reportData = response.report || [];
+        renderReportSummary(reportData);
+        renderReportTable(reportData);
+        hasReportLoadedInitially = true;
+        
+        const message = isManualRefresh ? 'Report refreshed successfully' : 'Report loaded successfully';
+        Toast.show('Success', `${message} with ${reportData.length} users.`, 'success');
+        
+    } catch (error) {
+        console.error('Failed to generate report:', error);
+        const msg = error.message === 'Failed to fetch'
+            ? 'Failed to fetch data. Is the backend server running?'
+            : error.message;
+        Toast.show('Error', msg, 'error');
+        renderEmptyState('Error: ' + msg);
+        
+    } finally {
+        isReportLoading = false;
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = `<svg class="icon icon-sm"><use href="../assets/icons.svg#refresh-cw"></use></svg> Generate Report`;
+        }
+    }
+}
+
+function renderEmptyState(message = 'No data found') {
+    const tbody = document.getElementById('report-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="17" class="report-empty-state">
+                <svg class="icon" style="width:2rem;height:2rem;opacity:0.4;">
+                    <use href="../assets/icons.svg#file-text"></use>
+                </svg>
+                <p>${message}</p>
+            </td>
+        </tr>
+    `;
+}
+
+function renderReportSummary(data) {
+    const summary = document.getElementById('report-summary');
+    if (!summary) return;
+
+    const totalUsers = data.length;
+    const totalAdmins = data.filter(u => u.role === 'admin').length;
+    const totalStudents = totalUsers - totalAdmins;
+    const avgProgress = totalUsers > 0 ? Math.round(data.reduce((a, u) => a + u.progress, 0) / totalUsers) : 0;
+    const totalTests = data.reduce((a, u) => a + u.test_attempts, 0);
+    const totalPassed = data.reduce((a, u) => a + u.tests_passed, 0);
+
+    summary.innerHTML = `
+        <div class="report-summary-item">
+            <span class="report-summary-value">${totalUsers}</span>
+            <span class="report-summary-label">Total Users</span>
+        </div>
+        <div class="report-summary-item">
+            <span class="report-summary-value">${totalStudents}</span>
+            <span class="report-summary-label">Students</span>
+        </div>
+        <div class="report-summary-item">
+            <span class="report-summary-value">${totalAdmins}</span>
+            <span class="report-summary-label">Admins</span>
+        </div>
+        <div class="report-summary-item">
+            <span class="report-summary-value">${avgProgress}%</span>
+            <span class="report-summary-label">Avg Progress</span>
+        </div>
+        <div class="report-summary-item">
+            <span class="report-summary-value">${totalTests}</span>
+            <span class="report-summary-label">Total Tests</span>
+        </div>
+        <div class="report-summary-item">
+            <span class="report-summary-value">${totalPassed}</span>
+            <span class="report-summary-label">Tests Passed</span>
+        </div>
+    `;
+}
+
+function renderReportTable(data) {
+    const tbody = document.getElementById('report-table-body');
+    if (!tbody) return;
+
+    if (!data.length) {
+        renderEmptyState('No users match your search criteria');
+        return;
+    }
+
+    tbody.innerHTML = data.map((u, i) => `
+        <tr>
+            <td class="report-cell-num">${i + 1}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <div class="report-avatar">${u.name.charAt(0).toUpperCase()}</div>
+                    <span class="report-cell-name">${u.name}</span>
+                </div>
+            </td>
+            <td class="report-cell-email">${u.email}</td>
+            <td>
+                <span class="status-badge ${u.role}" style="padding:0.2rem 0.5rem;border-radius:1rem;font-size:0.7rem;background:${u.role === 'admin' ? 'rgba(111,76,255,0.1)' : 'rgba(34,197,94,0.1)'};color:${u.role === 'admin' ? 'var(--primary)' : 'var(--success)'};">${u.role}</span>
+            </td>
+            <td>${u.joined || '-'}</td>
+            <td class="report-cell-num">${u.syllabi_count}</td>
+            <td class="report-cell-num">${u.total_topics}</td>
+            <td class="report-cell-num">${u.verified_topics}</td>
+            <td>
+                <div class="report-progress-wrap">
+                    <div class="progress-bar" style="height:0.3rem;flex:1;background:var(--background-modifier-border);border-radius:1rem;overflow:hidden;">
+                        <div style="width:${u.progress}%;background:var(--gradient-success);height:100%;"></div>
+                    </div>
+                    <span class="report-cell-num" style="min-width:2rem;">${u.progress}%</span>
+                </div>
+            </td>
+            <td class="report-cell-num">${u.test_attempts}</td>
+            <td class="report-cell-num">${u.tests_passed}</td>
+            <td class="report-cell-num">${u.avg_test_score}%</td>
+            <td class="report-cell-num">${u.current_streak}🔥</td>
+            <td class="report-cell-num">${u.longest_streak}</td>
+            <td>${u.last_activity || '-'}</td>
+            <td class="report-cell-num">${u.finals_completed}</td>
+            <td class="report-cell-num">${u.best_final_score}%</td>
+        </tr>
+    `).join('');
+}
+
+function exportReportCSV(data) {
+    const headers = [
+        '#', 'Name', 'Email', 'Role', 'Joined', 'Syllabi', 'Topics',
+        'Verified', 'Progress %', 'Tests', 'Passed', 'Avg Score %',
+        'Current Streak', 'Longest Streak', 'Last Active',
+        'Finals Completed', 'Best Final Score %'
+    ];
+
+    const rows = data.map((u, i) => [
+        i + 1, u.name, u.email, u.role, 
+        u.joined || '',
+        u.syllabi_count, u.total_topics, u.verified_topics, u.progress, 
+        u.test_attempts, u.tests_passed, u.avg_test_score, 
+        u.current_streak, u.longest_streak, 
+        u.last_activity || '',
+        u.finals_completed, u.best_final_score
+    ]);
+
+    // Senior Dev Tip: Prepend 'sep=,' to force Excel to use the correct delimiter regardless of locale
+    let csv = 'sep=,\n' + headers.join(',') + '\n';
+    
+    rows.forEach(row => {
+        csv += row.map((val, idx) => {
+            const cleanVal = (val === null || val === undefined) ? '' : String(val).trim();
+            // Don't quote dates or numbers to help Excel detect types
+            const isDate = (idx === 4 || idx === 14);
+            const isNumber = !isNaN(cleanVal) && cleanVal !== '';
+            
+            if (isDate || isNumber) {
+                return cleanVal;
+            }
+            return `"${cleanVal.replace(/"/g, '""')}"`;
+        }).join(',') + '\n';
+    });
+
+    // Add UTF-8 BOM for Excel compatibility
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `studymap_report_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    Toast.show('Exported', 'Report downloaded as CSV file.');
+}
+
 // Tab switching functionality
 function setupAdminTabs() {
     const tabButtons = document.querySelectorAll('.admin-tab-btn');
@@ -246,6 +529,8 @@ function setupAdminTabs() {
             // Initialize content for the active tab
             if (targetTab === 'admin-features') {
                 setupAdminPage();
+            } else if (targetTab === 'full-report') {
+                setupFullReport();
             } else if (targetTab === 'settings') {
                 setupAdminSettings();
             }
@@ -270,7 +555,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initLayout();
     setupAdminTabs();
-    
+
     // Load admin features by default
     setupAdminPage();
+    
+    // Auto load full report data in the background immediately
+    setupFullReport();
 });

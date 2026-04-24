@@ -52,7 +52,7 @@ def create_upload_folder():
 
 def ensure_mysql_database():
     """Ensure MySQL database exists and is accessible"""
-    dsn = os.environ.get('DATABASE_URL') or 'mysql+mysqlconnector://root:root123@localhost/studymap'
+    dsn = os.environ.get('DATABASE_URL') or 'mysql+mysqlconnector://root:ved%40123@localhost/studymap'
     parsed = urlparse(dsn)
     user = parsed.username or 'root'
     password = unquote(parsed.password or '')
@@ -163,7 +163,9 @@ def main():
         print("=" * 60)
         print()
         
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        # use_reloader=False prevents Flask from spawning a duplicate process
+        # (which doubles connection-pool usage and can exhaust MySQL connections)
+        app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
         
     except KeyboardInterrupt:
         print("\n\nServer stopped")
