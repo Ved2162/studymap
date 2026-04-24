@@ -1,0 +1,19 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Prevent site from being embedded in iframes (Anti-Clickjacking)
+    X-Frame-Options = "DENY"
+    # Prevent browser from guessing the MIME type
+    X-Content-Type-Options = "nosniff"
+    # Enable XSS protection in older browsers
+    X-XSS-Protection = "1; mode=block"
+    # Referrer policy to protect user privacy
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Strict Content Security Policy
+    # This tells browsers exactly which scripts and styles are allowed to run
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://studymap-backend-86ft.onrender.com;"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -2,21 +2,147 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyMap</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyMap — AI-Powered Curriculum Mastery</title>
+    <meta name="description"
+        content="Master your curriculum with AI-generated study plans, smart tests, and progress tracking. The professional learning platform for students." />
+    
+    <!-- Professional Meta Tags -->
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="StudyMap — AI-Powered Curriculum Mastery">
+    <meta property="og:description" content="Transform your syllabus into an interactive learning journey.">
+    <meta property="og:type" content="website">
+    
+    <!-- Trusted External Assets (Google Fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Local Trusted Assets -->
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-    <script>
-        // Redirect to landing page (which will redirect to dashboard if logged in)
-        window.location.href = 'landing/home.html';
-    </script>
+    <link rel="stylesheet" href="landing/landing.css" />
 </head>
 
 <body>
-    <noscript>
-        <p>Please enable JavaScript to use StudyMap.</p>
-        <a href="auth/auth.html">Go to Login</a>
-    </noscript>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="container navbar-inner">
+            <div class="logo">
+                <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+                    <path d="M22 10v6" />
+                    <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+                </svg>
+                <span class="logo-text">StudyMap</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#stats">Results</a>
+                <a href="#testimonials">Reviews</a>
+            </nav>
+            <div style="display: flex; align-items: center;">
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle theme">
+                    <svg width="20" height="20">
+                        <use href="assets/icons.svg#moon"></use>
+                    </svg>
+                </button>
+                <button class="btn btn-primary btn-sm" id="navCta">Get Started</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="container hero-inner">
+            <div class="badge animate-fade-in">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+                AI-Powered Learning Platform
+            </div>
+            <h1 class="hero-title animate-slide-up">
+                Master Your Curriculum<br />
+                <span class="gradient-text">With Confidence</span>
+            </h1>
+            <p class="hero-subtitle animate-slide-up delay-1">
+                Upload your syllabus, get AI-generated study plans, practice with smart tests,
+                and track every step of your progress.
+            </p>
+            <div class="hero-actions animate-slide-up delay-2">
+                <button class="btn btn-primary btn-lg" id="heroCta">
+                    Start Free
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </button>
+                <a href="#features" class="btn btn-outline btn-lg">See How It Works</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Everything You Need to <span class="gradient-text">Succeed</span></h2>
+                <p>Powerful tools designed to transform how you study.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card animate-slide-up">
+                    <h3>Smart Upload</h3>
+                    <p>Professional curriculum analysis using secure AI pipelines.</p>
+                </div>
+                <div class="feature-card animate-slide-up">
+                    <h3>Progress Tracking</h3>
+                    <p>Transparent and accurate monitoring of your learning journey.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p class="copyright">© 2026 StudyMap. Built for secure learning.</p>
+        </div>
+    </footer>
+
+    <!-- Essential Scripts -->
+    <script src="common/common.js"></script>
+    <script src="landing/landing.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme setup
+            if (window.State) {
+                State.load();
+                const themeToggleBtn = document.getElementById('theme-toggle');
+                if (themeToggleBtn) {
+                    const updateIcon = () => {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        themeToggleBtn.querySelector('use').setAttribute('href', `assets/icons.svg#${isDark ? 'sun' : 'moon'}`);
+                    };
+                    updateIcon();
+                    themeToggleBtn.addEventListener('click', () => {
+                        State.toggleTheme();
+                        updateIcon();
+                    });
+                }
+            }
+
+            // CTA handler fix for root location
+            const handleCta = () => {
+                const user = localStorage.getItem('studymap-user');
+                window.location.href = user ? 'dashboard/dashboard.html' : 'auth/auth.html';
+            };
+            document.getElementById('navCta')?.addEventListener('click', handleCta);
+            document.getElementById('heroCta')?.addEventListener('click', handleCta);
+        });
+    </script>
 </body>
 
 </html>
